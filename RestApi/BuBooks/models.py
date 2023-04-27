@@ -1,21 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 # Create your models here.
 
-
-class User(models.Model):
-    email = models.CharField(max_length=1000)
-    username = models.CharField(max_length=100, unique=True)
-    password = models.CharField(max_length=2000)
-    session_token = models.CharField(max_length=2000)
-
-
 class Author(models.Model):
-    username = models.CharField(max_length=100, unique=True)
-    email = models.CharField(max_length=1000)
-    password = models.CharField(max_length=2000)
-    session_token = models.CharField(max_length=2000)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     about_you = models.CharField(max_length=1000)
     url_image = models.CharField(max_length=1000)
@@ -46,13 +36,14 @@ class Book(models.Model):
     status_choices = [(Archived, "Archived"), (OnSale, "On Sale")]
     status = models.CharField(status_choices, default=OnSale, max_length=100)
     sales = models.BigIntegerField()
-    id_author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    # id_author = models.ForeignKey(Author, on_delete=models.CASCADE)
 
     def is_on_sale(self):
         return self.status in {self.OnSale}
 
 
 class Comment(models.Model):
+    title = models.CharField(max_length=100)
     comment = models.CharField(max_length=1000)
     rating = models.IntegerField()
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
