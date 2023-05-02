@@ -50,6 +50,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+MEDIA_ROOT = BASE_DIR / "Media"
+MEDIA_URL = "/media/"
 ROOT_URLCONF = 'RestApi.urls'
 
 TEMPLATES = [
