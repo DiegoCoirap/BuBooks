@@ -20,11 +20,11 @@ const SignUpForm = () => {
       setUsername(value);
     } else if (name === 'password') {
       setPassword(value);
-    } else if (name == 'email'){
+    } else if (name === 'email'){
       setEmail(value);
-    } else if (name == 'confirmEmail'){
+    } else if (name === 'confirmEmail'){
       setConfirmEmail(value);
-    } else if (name == 'confirmPassword'){
+    } else if (name === 'confirmPassword'){
       setConfirmPassword(value);
     }
   }
@@ -50,27 +50,7 @@ const SignUpForm = () => {
       setError('Passwords do not match.');
       return;
     }
-    try {
-      const response = await axios.post(BASE_URL + '/users', {
-        username: username,
-        email: email,
-        password: password
-      });
-      if (response.status === 201) {
-        const { token } = response.data;
-        setToken(token);
-        localStorage.setItem('token', token);
-        navigate('/');
-      }
-    } catch (error) {
-      if (error.response.status === 400) {
-        setError(error.response.data.message)
-      } else if (error.response.status === 401) {
-        setError("A user already exists with your username or email.")
-      } else {
-        setError("Error. Try again.")
-      }
-    }
+
   }
 
   return (

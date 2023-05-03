@@ -4,10 +4,17 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import UserPopUp from "../popUp/UserPopUp";
 import {useState} from "react";
-
-const HeaderWithtIcons = () => {
+import { createTheme } from '@mui/material/styles';
+const HeaderWithIcons = () => {
   const navigate = useNavigate();
   const [showUserPopUp, setShowUserPopUp] = useState(false);
+
+  const theme = createTheme({
+      palette: {
+          primary: '#787E91',
+          secondary: '#E4E7ED',
+      }
+  });
 
   return (
     <div className='backgroundHeader'>
@@ -15,10 +22,10 @@ const HeaderWithtIcons = () => {
         <span className='blueLogo'>B</span>
         u<span className='blueLogo'>B</span>ooks
       </h1>
-        <PersonRoundedIcon className='profileIcon' onClick={() => setShowUserPopUp(true)}/>
+        <PersonRoundedIcon sx={{color: pink[500]}} className='profileIcon' onClick={() => setShowUserPopUp(true)}/>
         <ShoppingCartOutlinedIcon className='cartIcon'/>
       <UserPopUp isOpen={showUserPopUp} onClose={() => setShowUserPopUp(false)}/>
     </div>
   );
 };
-export default HeaderWithtIcons
+export default HeaderWithIcons

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import BASE_URL from '../../environment';
+import Api from "../../Api";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -30,7 +31,14 @@ const LoginForm = () => {
       setError('The password cannot be empty.');
       return;
     }
+     try {
+       const response = Api.login()
+     }catch (e){
+
+     }
+
     try {
+
       const response = await axios.post(`${BASE_URL}/sessions`, {
         username: username,
         password: password
@@ -53,7 +61,11 @@ const LoginForm = () => {
       } else {
         setError("Login error. Please retry.");
       }
-    }
+    } const response = await axios.post(BASE_URL + '/users', {
+                username: username,
+                email: email,
+                password: password
+            });
   }
 
   return (
