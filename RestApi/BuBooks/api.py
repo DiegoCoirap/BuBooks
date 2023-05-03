@@ -1,27 +1,80 @@
 from ninja import NinjaAPI
-from ninja.security import django_auth
-from BuBooks.models import Book
+from ninja import ModelSchema
+from django.contrib.auth.models import User
+from ninja.pagination import paginate
+from typing import List
+from rest_framework.authtoken.models import Token
+
+from .models import Book, Category, Cart, Comment, Author, Sale, Wishlist
 
 api = NinjaAPI(csrf=True)
 
 
-# Generate data with Factory boy django
-
-@api.get("/pets", auth=django_auth)
-def pets(request):
-    return f"Authenticated user {request.auth}"
-
-
-@api.get("/add")
-def add(request, a: int, b: int):
-    return {"result": a + b}
+class UserSchema(ModelSchema):
+    class Config:
+        model = User
+        model_fields = ['id', 'username', 'first_name', 'last_name']
 
 
-@api.get("/library")
-def main(request):
-    books = Book.objects.all()
-    output = []
-    for row in books:
-        dictionary = {'id': row.id, 'title': row.title, 'url_cover': row.url_cover, 'price': row.price}
-        output.append(dictionary)
-    return output
+class BookSchema(ModelSchema):
+    class Config:
+        model = Book
+        model_fields = ['id', 'title', 'language', 'synopsis', 'category', 'series',
+                        'volumeNumber', 'target_audience', 'mature_content', 'price',
+                        'book_cover', 'book_file', 'status', 'sales']
+
+
+class CommentSchema(ModelSchema):
+    class Config:
+        model = Comment
+        model_fields = "__all__"
+
+
+class CartSchema(ModelSchema):
+    class Config:
+        model = Cart
+        model_fields = "__all__"
+
+
+class WishListSchema(ModelSchema):
+    class Config:
+        model = Wishlist
+        model_fields = "__all__"
+
+
+class SaleSchema(ModelSchema):
+    class Config:
+        model = Sale
+        model_fields = "__all__"
+
+
+class CategorySchema(ModelSchema):
+    class Config:
+        model = Category
+        model_fields = "__all__"
+
+
+class AuthorSchema(ModelSchema):
+    class Config:
+        model = Author
+        model_fields = "__all__"
+
+
+@api.get("/library", response=List[BookSchema])
+@paginate
+def library(request):
+    queryset = Book.objects.all()
+    return list(queryset)
+
+
+@api.get("/categories", response=List[CategorySchema])
+def categories(request):
+    queryset = Category.objects.all()
+    return list(queryset)
+
+
+@api.post("/login")
+def login(request, userschema: UserSchema):
+
+    token = Token.objects.create()
+    return token.key
