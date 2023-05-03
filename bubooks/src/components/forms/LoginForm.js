@@ -64,7 +64,7 @@ const LoginForm = () => {
         <label>Password</label>
         <input type='password' name='password' value={password} onChange={handleInputChange} />
         <a className='forgotLink' onClick={() => navigate('/forgotPassword')}>Forgot your password?</a>
-        <button type='submit' className='buttonLogin'onClick={() => navigate('/')}>Login</button>
+        <button type='submit' className='buttonLogin'>Login</button>
         <p className='signUpLink'>New here? <a className='signUpLink' onClick={() => navigate('/signUpUser')}>Sign up</a></p>
         {error && <p className='error'>{error}</p>}
       </form>
