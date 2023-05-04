@@ -24,7 +24,9 @@ SECRET_KEY = 'django-insecure-@h1*ltrdi&rah&lt^5a4-&zb2g*+_rjxhlxtidih#-ul^_ft4^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '192.168.0.23'
+]
 
 # Application definition
 
@@ -37,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django.contrib.staticfiles',
     'BuBooks.apps.BubooksConfig',
+    'corsheaders',
     'rest_framework.authtoken',
 ]
 
@@ -45,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -53,7 +57,9 @@ MIDDLEWARE = [
 MEDIA_ROOT = BASE_DIR / "Media"
 MEDIA_URL = "/media/"
 ROOT_URLCONF = 'RestApi.urls'
-
+CORS_ALLOWED_ORIGINS = [
+    "http://192.168.0.39:3000",
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

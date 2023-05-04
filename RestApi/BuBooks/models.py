@@ -10,9 +10,9 @@ def author_directory_path(instance, filename):
 # Create your models here.
 class Author(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    about_you = models.TextField()
-    image = models.ImageField(upload_to=author_directory_path)
+    name = models.CharField(max_length=100, null=True)
+    about_you = models.TextField(null=True)
+    image = models.ImageField(upload_to=author_directory_path, null=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -43,17 +43,17 @@ class Book(models.Model):
 
     # Make a Choice field with the languages
     class Language(models.TextChoices):
-        Spanish = "ES"
-        English = "EN"
-        French = "FR"
-        German = "DE"
-        Japanese = "JA"
-        Korean = "KO"
-        Russian = "RU"
-        Portuguese = "PT"
-        Chinese = "ZH"
-        Italian = "IT"
-        Hindi = "HI"
+        Spanish = "ES", "Spanish"
+        English = "EN", "English"
+        French = "FR", "French"
+        German = "DE", "German"
+        Japanese = "JA", "Japanese"
+        Korean = "KO", "Korean"
+        Russian = "RU", "Russian"
+        Portuguese = "PT", "Portuguese"
+        Chinese = "ZH", "Chinese"
+        Italian = "IT", "Italian"
+        Hindi = "HI", "Hindi"
 
     language = models.TextField(choices=Language.choices)
     synopsis = models.TextField()
