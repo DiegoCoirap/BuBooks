@@ -9,20 +9,13 @@ const HeaderWithIcons = () => {
   const navigate = useNavigate();
   const [showUserPopUp, setShowUserPopUp] = useState(false);
 
-  const theme = createTheme({
-      palette: {
-          primary: '#787E91',
-          secondary: '#E4E7ED',
-      }
-  });
-
   return (
     <div className='backgroundHeader'>
       <h1 className='logo' onClick={() => navigate('/')}>
         <span className='blueLogo'>B</span>
         u<span className='blueLogo'>B</span>ooks
       </h1>
-        <PersonRoundedIcon sx={{color: pink[500]}} className='profileIcon' onClick={() => setShowUserPopUp(true)}/>
+        <PersonRoundedIcon  className='profileIcon' onClick={() => setShowUserPopUp(true)}/>
         <ShoppingCartOutlinedIcon className='cartIcon'/>
       <UserPopUp isOpen={showUserPopUp} onClose={() => setShowUserPopUp(false)}/>
     </div>

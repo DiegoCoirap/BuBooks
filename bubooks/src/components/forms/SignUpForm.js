@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import BASE_URL from "../../environment";
+import Api from "../../Api";
 
 const SignUpForm = () => {
   const navigate = useNavigate();
@@ -51,21 +52,34 @@ const SignUpForm = () => {
       return;
     }
 
+    try{
+      const {token, error} = await Api.signUp({username, email, password});
+      if (error){
+        setError(error);
+      }else{
+        setToken(token);
+        localStorage.setItem('token', token);
+        navigate('/');
+      }
+    }catch (error){
+      setError('Error. Try again.')
+    }
+
   }
 
   return (
     <div>
       <form className='signUpForm' onSubmit={handleSubmit}>
         <label>Username</label>
-        <input type='text' name='username' onChange={handleInputChange} />
+        <input type='text' name='username' autoComplete='off' onChange={handleInputChange} />
         <label>Email</label>
-        <input type='email' name='email' onChange={handleInputChange} />
+        <input type='email' name='email' autoComplete='off' onChange={handleInputChange} />
         <label>Confirm your email</label>
-        <input type='email' name='confirmEmail' onChange={handleInputChange} />
+        <input type='email' name='confirmEmail' autoComplete='off' onChange={handleInputChange} />
         <label>Password</label>
-        <input type='password' name='password' onChange={handleInputChange} />
+        <input type='password' name='password' autoComplete='off' onChange={handleInputChange} />
         <label>Confirm your password</label>
-        <input type='password' name='confirmPassword' onChange={handleInputChange} />
+        <input type='password' name='confirmPassword' autoComplete='off' onChange={handleInputChange} />
         <button type='submit' className='buttonSignUp' >Sign Up</button>
         <p className='signUpLink'>Already have an account? <a className='signUpLink' onClick={() => navigate('/loginUser')}>Login</a></p>
         {error && <p className='error'>{error}</p>}
