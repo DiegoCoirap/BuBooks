@@ -22,11 +22,7 @@ const SendRequest = async (method, url, data = null) => {
     if (error.response.status === 400) {
       throw new Error(error.response.data.message);
     } else if (error.response.status === 401) {
-      if (url === '/auth/login') {
         throw new Error("Incorrect username or password.");
-      } else {
-        throw new Error("A user already exists with your username or email.");
-      }
     } else {
       throw new Error("Error. Try again.");
     }
