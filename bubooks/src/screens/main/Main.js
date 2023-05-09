@@ -5,6 +5,8 @@ import SearchingBar from "../../components/searching/searchingBar/SearchingBar";
 import Tags from "../../components/searching/tags/Tags";
 import BooksWithStars from "../../components/books/BooksWithStars";
 const Main = () => {
+    const date = new Date ()
+    const month =  date.toLocaleString('default', {month:'long'})
 
     return (
         <div className='main'>
@@ -14,8 +16,9 @@ const Main = () => {
                 <div className='rightMain'>
                     <SearchingBar/>
                     <Tags/>
+                    <SearchingBar/>
+                    <h2>{month} best sellers</h2>
                     <BooksWithStars/>
-
                 </div>
             </div>
         </div>
