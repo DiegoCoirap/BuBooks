@@ -36,8 +36,6 @@ def book_cover_directory_path(instance, filename):
 
 
 class Book(models.Model):
-    supplier = models.BigIntegerField()
-    supplier_book_id = models.BigIntegerField()
     id_author = models.ForeignKey(Author, on_delete=models.CASCADE, default=0)
     title = models.CharField(max_length=100)
 
@@ -93,7 +91,6 @@ class Comment(models.Model):
     title = models.CharField(max_length=100)
     comment = models.TextField()
 
-    # Make a Choice field with the ratings
     class Rating(models.IntegerChoices):
         Zero = 0
         One = 1
