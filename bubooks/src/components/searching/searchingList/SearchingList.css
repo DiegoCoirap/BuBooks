@@ -1,0 +1,21 @@
+.searchingList{
+    border-right: 1px solid black;
+    width: 291px;
+}
+
+.listTitle{
+    font-size: 20px;
+    font-weight: normal;
+    color: #242424;
+}
+.list{
+    font-size: 15px;
+    margin-bottom: 10px;
+    list-style-type: none;
+}
+
+.list li{
+    color: #474954;
+    text-decoration: #474954 solid underline;
+    cursor: pointer;
+}

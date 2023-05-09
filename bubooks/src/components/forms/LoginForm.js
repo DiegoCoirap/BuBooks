@@ -1,8 +1,7 @@
 import './LoginForm.css';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-import BASE_URL from '../../environment';
+import Api from "../../Api";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -12,7 +11,7 @@ const LoginForm = () => {
   const [token, setToken] = useState('');
 
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
+    const {name, value} = event.target;
     if (name === 'username') {
       setUsername(value);
     } else if (name === 'password') {
@@ -31,28 +30,16 @@ const LoginForm = () => {
       return;
     }
     try {
-      const response = await axios.post(`${BASE_URL}/sessions`, {
-        username: username,
-        password: password
-      });
-      if (response.status === 201) {
-        const { token } = response.data;
-        if (token) {
-          setToken(token);
-          localStorage.setItem('token', token);
-          navigate('/');
-        } else {
-          setError('Login error. Please retry.');
-        }
+      const { token, error } = await Api.login({username, password});
+      if (error) {
+        setError(error);
+      } else {
+        setToken(token);
+        localStorage.setItem('token', token);
+        navigate('/');
       }
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError(error.response.data.message);
-      } else if (error.response && error.response.status === 401) {
-        setError("Incorrect username or password.");
-      } else {
-        setError("Login error. Please retry.");
-      }
+      setError("Error. Try again.");
     }
   }
 
@@ -60,16 +47,17 @@ const LoginForm = () => {
     <div>
       <form className='loginForm' onSubmit={handleFormSubmit}>
         <label>Username</label>
-        <input type='text' name='username' value={username} onChange={handleInputChange} />
+        <input type='text' name='username' value={username} onChange={handleInputChange}/>
         <label>Password</label>
-        <input type='password' name='password' value={password} onChange={handleInputChange} />
+        <input type='password' name='password' value={password} onChange={handleInputChange}/>
         <a className='forgotLink' onClick={() => navigate('/forgotPassword')}>Forgot your password?</a>
         <button type='submit' className='buttonLogin'>Login</button>
-        <p className='signUpLink'>New here? <a className='signUpLink' onClick={() => navigate('/signUpUser')}>Sign up</a></p>
+        <p className='signUpLink'>New here? <a className='signUpLink' onClick={() => navigate('/signUpUser')}>Sign
+          up</a></p>
         {error && <p className='error'>{error}</p>}
       </form>
     </div>
-  )
+  );
 }
 
 export default LoginForm;

@@ -13,7 +13,7 @@ const LoginUser = () => {
             <HeaderWithoutIcons/>
             <div className='boxLoginUser'>
                 <button className='UbuttonLoginUser' >User</button>
-                <button className='UbuttonLoginAuthor'onClick={() => navigate('/loginAuthor')}>Author</button>
+                <button className='UbuttonLoginAuthor' onClick={() => navigate('/loginAuthor')}>Author</button>
                 <div className='containerLoginUser'>
                     <h2 className='loginH2'>USER LOGIN</h2>
                     <LoginForm/>
