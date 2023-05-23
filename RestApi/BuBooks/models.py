@@ -2,6 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class IsAuthor(models.Model):
+    User = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    is_author = models.BooleanField()
+    avatar = models.ImageField()
+
+    def check_author(self):
+        if self.is_author:
+            return 'Is an author'
+        else:
+            return 'Is an user'
+
+
 def author_directory_path(instance, filename):
     # Image will be uploaded to Media/images/author/author_<id>/<filename>
     return f"images/authors/author_{instance.user.username}/pfp/{filename}"
@@ -10,12 +22,12 @@ def author_directory_path(instance, filename):
 # Create your models here.
 class Author(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, null=True)
+    alias = models.CharField(max_length=100, null=True)
     about_you = models.TextField(null=True)
     image = models.ImageField(upload_to=author_directory_path, null=True)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.alias}"
 
 
 class Category(models.Model):
@@ -73,15 +85,15 @@ class Book(models.Model):
     book_cover = models.ImageField(upload_to=book_cover_directory_path)
     book_file = models.FileField(upload_to=book_directory_path)
 
-    # choices of the book status, default value = on sale.
+    # choices of the book status, default value = archived.
 
     # noinspection SpellCheckingInspection
     class Status(models.TextChoices):
         Forsale = "O"
         Archived = "A"
 
-    status = models.TextField(choices=Status.choices)
-    sales = models.BigIntegerField()
+    status = models.TextField(choices=Status.choices, default="A")
+    sales = models.BigIntegerField(default=0)
 
     def __str__(self):
         return f"{self.title}"
