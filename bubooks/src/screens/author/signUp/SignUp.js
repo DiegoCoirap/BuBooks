@@ -14,7 +14,8 @@ const SignUpAuthor = () => {
                 <button className='AbuttonSignUpAuthor'>Author</button>
                 <div className='containerSignUpAuthor'>
                     <h2 className='signUpH2'>AUTHOR SIGN UP</h2>
-                    <SignUpForm/>
+                    <SignUpForm userType="author" />
+
                 </div>
             </div>
         </div>

@@ -2,7 +2,6 @@ import './SearchingList.css'
 import BASE_URL from '../../../environment'
 import React, { useEffect, useState } from 'react';
 import axios from "axios";
-import {Language} from "@mui/icons-material";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);

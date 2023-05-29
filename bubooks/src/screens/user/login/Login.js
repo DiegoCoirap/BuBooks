@@ -16,7 +16,7 @@ const LoginUser = () => {
                 <button className='UbuttonLoginAuthor' onClick={() => navigate('/loginAuthor')}>Author</button>
                 <div className='containerLoginUser'>
                     <h2 className='loginH2'>USER LOGIN</h2>
-                    <LoginForm/>
+                    <LoginForm userType="user" />
 
                 </div>
             </div>

@@ -16,7 +16,8 @@ const LoginAuthor = () => {
                 <button className='AbuttonLoginAuthor'>Author</button>
                 <div className='containerLoginAuthor'>
                     <h2 className='loginH2'>AUTHOR LOGIN</h2>
-                    <LoginForm/>
+                    <LoginForm userType="author" />
+
 
                 </div>
             </div>
