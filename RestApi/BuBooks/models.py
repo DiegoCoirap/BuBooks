@@ -115,6 +115,10 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
+    def __str__(self):
+        response = f" BOOK: {self.book}, USER: {self.user}, RATING: {self.rating}"
+        return f"{response}"
+
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
