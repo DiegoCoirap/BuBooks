@@ -143,6 +143,13 @@ class AuthorIn(ModelSchema):
         model_fields = ['alias', 'about_you', 'image']
 
 
+class CommentIn(Schema):
+    title: str
+    comment: str
+    rating: int
+    book: str
+
+
 def validate_token(token_header):
     if token_header:
         if token_header.startswith('Bearer '):
@@ -288,6 +295,26 @@ def add_book_wishlist(request, payload: WishListIn):
         )
         book_wishlist.save()
         return {"status": 200, "message": "Book added to the Wishlist"}
+
+
+@api.post("/create-comment", auth=AuthBearer())
+def create_comment(request, payload: CommentIn):
+    token_header = request.headers.get('Authorization')
+    user = retrieve_user(token_header)
+    is_author = is_user_an_author(user)
+    if is_author:
+        return 403, "UnAuthorized"
+    else:
+        book = get_object_or_404(Book, title=payload.book)
+        comment = Comment(
+            title=payload.title,
+            comment=payload.comment,
+            rating=payload.rating,
+            user=user,
+            book=book,
+        )
+        comment.save()
+        return {"status": 200, "message": "Comment created successfully"}
 
 
 @api.post("/add-book-cart", auth=AuthBearer())
