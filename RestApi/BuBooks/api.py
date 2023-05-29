@@ -150,6 +150,17 @@ class CommentIn(Schema):
     book: str
 
 
+class CommentOut(Schema):
+    title: str
+    comment: str
+    rating: str
+    user: str
+
+
+class GetBookComment(Schema):
+    book: str
+
+
 def validate_token(token_header):
     if token_header:
         if token_header.startswith('Bearer '):
@@ -212,7 +223,8 @@ def signup_user(request, user_petition: UserRegister):
     if user_petition is not None:
         already_exists = User.objects.get(username=user_petition.username)
         if already_exists is None:
-            user = {'username': user_petition.username, 'email': user_petition.email, 'password': user_petition.password}
+            user = {'username': user_petition.username, 'email': user_petition.email,
+                    'password': user_petition.password}
             try:
                 User.objects.create_user(**user)
             except RuntimeError:
@@ -446,6 +458,24 @@ def my_books(request):
     return SchemaOut
 
 
+@api.api_operation(["POST", "PATCH"], "/comments", auth=None, response=List[CommentOut])
+def get_comments(request, payload: GetBookComment):
+    book = get_object_or_404(Book, title=payload.book)
+    comments = Comment.objects.filter(book=book.id)
+    if comments is None:
+        return 404, "Object does not exist"
+    SchemaOut = []
+    for comment in comments:
+        comment_info = {
+            'title': comment.title,
+            'comment': comment.comment,
+            'rating': comment.rating,
+            'user': str(comment.user)
+        }
+        SchemaOut.append(comment_info)
+    return SchemaOut
+
+
 @api.get("/categories", response=List[CategorySchema])
 def categories(request):
     queryset = Category.objects.all()
@@ -498,7 +528,6 @@ def change_password(request, payload: ChangePassword):
         return {"message": "User password has been successfully changed", "status": 200}
     else:
         return 422, "Invalid input"
-
 
 
 @api.delete("/logout", auth=AuthBearer())
