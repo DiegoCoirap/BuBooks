@@ -388,7 +388,7 @@ def wish_list(request):
     return {"status": 200}, SchemaOut
 
 
-@api.get("/cart", response=List[CartOut])
+@api.get("/cart", response=List[CartOut], auth=AuthBearer())
 def cart(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
