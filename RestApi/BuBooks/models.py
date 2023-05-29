@@ -49,7 +49,7 @@ def book_cover_directory_path(instance, filename):
 
 class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, default=0)
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
 
     # Make a Choice field with the languages
     class Language(models.TextChoices):
