@@ -1,24 +1,49 @@
 from datetime import datetime
 from django.contrib.auth import authenticate
-import json
 
 from django.core.mail import send_mail
 from django.http import BadHeaderError, HttpResponseRedirect, HttpResponse
 from ninja import NinjaAPI, Schema
 from ninja import ModelSchema
+from ninja.security import HttpBearer
+from ninja.errors import ValidationError, AuthenticationError, HttpError
 from django.contrib.auth.models import User
 from ninja.pagination import paginate
 from typing import List
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from .models import Book, Category, Cart, Comment, Author, Sale, Wishlist, UserExtraData
-from ninja.security import HttpBearer
 
 # https://django-ninja.rest-framework.com/guides/authentication/ example auth
 # https://django-ninja.rest-framework.com/tutorial/other/crud/ example books
 # https://docs.djangoproject.com/en/4.2/topics/auth/default/#how-to-log-a-user-in
 
 api = NinjaAPI(csrf=True)
+
+
+@api.exception_handler(ValidationError)
+def invalid_body(request, exc):
+    return 422, "Invalid Body"
+
+
+@api.exception_handler(ValidationError)
+def invalid_input(request, exc):
+    return 422, "Invalid input"
+
+
+@api.exception_handler(AuthenticationError)
+def authentication_error(request, exc):
+    return 403, "UnAuthorized"
+
+
+@api.exception_handler(HttpError)
+def server_error(request, exc):
+    return 503, "Service Unavailable. Please retry later."
+
+
+@api.exception_handler(HttpError)
+def object_does_not_exist(request, exc):
+    return 404, "Object does not exist"
 
 
 class AuthBearer(HttpBearer):
@@ -30,24 +55,15 @@ class AuthBearer(HttpBearer):
                 user_id = get_object_or_404(Token, key=auth_token)
                 user = get_object_or_404(User, username=user_id.user)
             except Token.DoesNotExist:
-                raise "Unauthorized"
+                raise authentication_error()
             try:
                 user_token = Token.objects.get(user=user)
             except Token.DoesNotExist:
-                raise "Unauthorized"
+                raise authentication_error()
             if key == user_token.key:
                 return key
         else:
-            data = json.loads(request.body.decode('utf-8'))
-            username = data.get('username')
-            if username:
-                user = get_object_or_404(User, username=username)
-                try:
-                    user_token = Token.objects.get(user=user)
-                except Token.DoesNotExist:
-                    raise "Unauthorized"
-                if key == user_token.key:
-                    return key
+            raise authentication_error()
 
 
 # ValidateEmail not implemented yet
@@ -164,16 +180,19 @@ def validate_token(token_header):
             auth_token = token_header[7:]
             return auth_token
         else:
-            return "Unauthorized"
+            raise authentication_error()
     else:
-        return "Unauthorized"
+        raise authentication_error()
 
 
 def retrieve_token(username):
     user = get_object_or_404(User, username=username)
     token = Token.objects.filter(user=user).first()
     if token is None:
-        token = Token.objects.create(user=user)
+        try:
+            token = Token.objects.create(user=user)
+        except token.DoesNotExist:
+            raise server_error
 
     return token.key
 
@@ -209,28 +228,38 @@ def validate_email(email_data):
             return HttpResponse("Invalid header found.")
         return HttpResponseRedirect("/contact/thanks/")
     else:
-        # In reality we'd use a form class
-        # to get proper validation errors.
-        return HttpResponse("Make sure all fields are entered and valid.")
+        raise invalid_body()
 
 
 @api.post("/sign-up-user", auth=None)
 def signup_user(request, user_petition: UserRegister):
-    user = {'username': user_petition.username, 'email': user_petition.email, 'password': user_petition.password}
-    User.objects.create_user(**user)
-    author_user = get_object_or_404(User, username=user_petition.username)
-    UserExtraData.objects.create(user=author_user, is_author=user_petition.is_author, avatar=None)
+    if user_petition is not None:
+        user = {'username': user_petition.username, 'email': user_petition.email, 'password': user_petition.password}
+        try:
+            User.objects.create_user(**user)
+        except:
+            raise server_error
+        author_user = get_object_or_404(User, username=user_petition.username)
+        UserExtraData.objects.create(user=author_user, is_author=user_petition.is_author, avatar=None)
+    else:
+        raise invalid_body()
+
+    return {"status": 200, "message": "User has been successfully created"}
 
 
 @api.post("/create-author", auth=AuthBearer())
 def create_author_data(request, author: AuthorIn):
-    token = request.headers.get('Authorization')
-    auth_token = validate_token(token)
-    token_table = get_object_or_404(Token, key=auth_token)
-    user_query = get_object_or_404(User, username=token_table.user)
-    dictionary = {"user_id": user_query.id, "alias": author.alias, "about_you": author.about_you,
-                  "image": author.image}
-    Author.objects.create(**dictionary)
+    try:
+        token = request.headers.get('Authorization')
+        auth_token = validate_token(token)
+        token_table = get_object_or_404(Token, key=auth_token)
+        user_query = get_object_or_404(User, username=token_table.user)
+        dictionary = {"user_id": user_query.id, "alias": author.alias, "about_you": author.about_you,
+                      "image": author.image}
+        Author.objects.create(**dictionary)
+        return {"status": 200, "message": "Author profile has been successfully created"}
+    except AttributeError:
+        authentication_error()
 
 
 @api.post("/login")
@@ -242,7 +271,7 @@ def login(request, use: LogIn):
         token_key = retrieve_token(use.username)
         return token_key
     else:
-        return ":("
+        raise invalid_body()
 
 
 @api.post("/create-book", auth=AuthBearer())
@@ -267,8 +296,9 @@ def create_book(request, created_book: BookSchema):
         )
         book.save()
         book.category.set(created_book.category)
+        return {"status": 200, "message": "Book created successfully"}
     else:
-        return "User is not an author"
+        raise authentication_error()
 
 
 @api.post("/add-book-wishlist", auth=AuthBearer())
@@ -277,7 +307,7 @@ def add_book_wishlist(request, payload: WishListIn):
     user = retrieve_user(token)
     is_author = is_user_an_author(user)
     if is_author:
-        return "User is an author"
+        return authentication_error()
     else:
         book = get_object_or_404(Book, id=payload.book_id)
         book_wishlist = Wishlist(
@@ -285,7 +315,7 @@ def add_book_wishlist(request, payload: WishListIn):
             book_id=book,
         )
         book_wishlist.save()
-        return "Book added to the wishlist"
+        return {"status": 200, "message": "Book added to the Wishlist"}
 
 
 @api.post("/add-book-cart", auth=AuthBearer())
@@ -298,6 +328,7 @@ def add_book_cart(request, payload: CartIn):
         book_id=book,
     )
     book_Cart.save()
+    return {"status": 200, "message": "Book added to the Cart"}
 
 
 @api.post("/book-bought", auth=AuthBearer())
@@ -313,20 +344,24 @@ def sale(request, payload: SalesIn):
         book_id=book,
     )
     book_sale.save()
+    return {"status": 200, "message": "Book bought successfully"}
 
 
 @api.get("/library", response=List[BookSchema])
 @paginate
 def library(request):
     queryset = Book.objects.all()
-    return list(queryset)
+    return {"status": 200}, list(queryset)
 
 
 @api.get("/wish-list", response=List[WishListOut], auth=AuthBearer())
 def wish_list(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
-    wishlist_books = Wishlist.objects.filter(user_id=user.id).values('book_id')
+    try:
+        wishlist_books = Wishlist.objects.filter(user_id=user.id).values('book_id')
+    except wishlist_books.DoesNotExist:
+        raise object_does_not_exist()
     SchemaOut = []
     for wishlist_book in wishlist_books:
         books = Book.objects.get(id=wishlist_book.book_id)
@@ -339,18 +374,44 @@ def wish_list(request):
             'price': books.price
         }
         SchemaOut.append(book_info)
-    return SchemaOut
+    return {"status": 200}, SchemaOut
 
 
 @api.get("/cart", response=List[CartOut])
 def cart(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
-    cart_books = Cart.objects.filter(user_id=user.id).values('book_id')
+    try:
+        cart_books = Cart.objects.filter(user_id=user.id).values('book_id')
+    except cart_books.DoesNotExist:
+        raise object_does_not_exist()
     SchemaOut = []
     for cart_book in cart_books:
         books = Book.objects.get(id=cart_book.book_id)
         author = Author.objects.get(id=books.author_id)
+        book_info = {
+            'title': books.title,
+            'author': author.alias,
+            'language': books.language,
+            'book_cover': str(books.book_cover),
+            'price': books.price
+        }
+        SchemaOut.append(book_info)
+    return {200}, SchemaOut
+
+
+@api.get("/cart", response=List[CartOut])
+def cart(request):
+    token = request.headers.get('Authorization')
+    user = retrieve_user(token)
+    try:
+        cart_books = Cart.objects.filter(user_id=user.id).values('book_id')
+    except cart_books.DoesNotExist:
+        object_does_not_exist()
+    SchemaOut = []
+    for cart_book in cart_books:
+        books = get_object_or_404(Book, id=cart_book.book_id)
+        author = get_object_or_404(Author, id=books.author_id)
         book_info = {
             'title': books.title,
             'author': author.alias,
@@ -366,7 +427,10 @@ def cart(request):
 def my_books(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
-    user_books = Sale.objects.filter(user_id=user.id)
+    try:
+        user_books = Sale.objects.filter(user_id=user.id)
+    except user_books.DoesNotExist:
+        object_does_not_exist
     SchemaOut = []
     for user_book in user_books:
         books = Book.objects.get(id=user_book.book_id)
@@ -380,7 +444,6 @@ def my_books(request):
             'date': str(user_book.date),
         }
         SchemaOut.append(book_info)
-
     return SchemaOut
 
 
@@ -403,6 +466,7 @@ def modify_author_data(request, author: AuthorIn):
     author_query.about_you = author.about_you
     author_query.image = author.image
     author_query.save()
+    return {"message": "Author profile has been created successfully", "status": 200}
 
 
 @api.put("/modify-user", auth=AuthBearer())
@@ -411,29 +475,34 @@ def modify_user(request, payload: ModifyUser):
     user = retrieve_user(token)
     if payload.username is not None:
         user.username = payload.username
+    else:
+        raise
     if payload.email is not None:
         user.email = payload.email
     user.save()
+    return {"message": "User has been modified successfully", "status": 200}
 
 
 @api.put("/change-password", auth=AuthBearer())
-def change_password(request, change: ChangePassword):
-    username = change.username
+def change_password(request, payload: ChangePassword):
+    if payload is None:
+        raise invalid_body
+    username = payload.username
     user = get_object_or_404(User, username=username)
-    if User is not None:
-        user.set_password(str(change.new_password))
+    if user is not None:
+        user.set_password(str(payload.new_password))
         user.save()
         token = request.headers.get('Authorization')
         auth_token = validate_token(token)
         user_id = get_object_or_404(Token, key=auth_token)
         user_id.delete()
-        return "Change was successful, pls log in again"
+        return {"message": "User password has been successfully changed", "status": 200}
     else:
-        return "Wrong username"
+        raise invalid_input()
 
 
 @api.delete("/logout", auth=AuthBearer())
 def logout(request):
     token = request.auth
     Token.objects.filter(key=token).delete()
-    return "LogOut was successful"
+    return {"status": 200, "message": "User LoggedOut successfully"}
