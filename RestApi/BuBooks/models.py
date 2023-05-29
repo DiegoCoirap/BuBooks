@@ -2,8 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class IsAuthor(models.Model):
-    User = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+class UserExtraData(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     is_author = models.BooleanField()
     avatar = models.ImageField()
 
@@ -39,16 +39,16 @@ class Category(models.Model):
 
 def book_directory_path(instance, filename):
     # File will be uploaded to Media/books/book_<id>/<filename>
-    return f"books/author_{instance.id_author.user.id}/{filename}"
+    return f"books/author_{instance.id_author.user.id}/{filename}/"
 
 
 def book_cover_directory_path(instance, filename):
     # Image will be uploaded to Media/images/book_cover/book_<id>/<filename>
-    return f"images/authors/author_{instance.id_author.user.id}/book/{filename}"
+    return f"images/authors/author_{instance.id_author.user.id}/book/{filename}/"
 
 
 class Book(models.Model):
-    id_author = models.ForeignKey(Author, on_delete=models.CASCADE, default=0)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=0)
     title = models.CharField(max_length=100)
 
     # Make a Choice field with the languages
@@ -82,8 +82,8 @@ class Book(models.Model):
     target_audience = models.TextField(choices=TargetAudience.choices)
     mature_content = models.BooleanField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
-    book_cover = models.ImageField(upload_to=book_cover_directory_path)
-    book_file = models.FileField(upload_to=book_directory_path)
+    book_cover = models.ImageField(upload_to=book_cover_directory_path, default=None)
+    book_file = models.FileField(upload_to=book_directory_path, default=None)
 
     # choices of the book status, default value = archived.
 
@@ -112,21 +112,33 @@ class Comment(models.Model):
         Five = 5
 
     rating = models.IntegerField(choices=Rating.choices)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_id = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
 
 class Cart(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_id = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    def __str__(self):
+        response = f" BOOK: {self.book}, USER: {self.user}"
+        return f"{response}"
 
 
 class Wishlist(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_id = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    def __str__(self):
+        response = f" BOOK: {self.book}, USER: {self.user}"
+        return f"{response}"
 
 
 class Sale(models.Model):
     date = models.DateTimeField(auto_now_add=True)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    book_id = models.ForeignKey(Book, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+
+    def __str__(self):
+        response = f" BOOK: {self.book}, USER: {self.user}"
+        return f"{response}"
