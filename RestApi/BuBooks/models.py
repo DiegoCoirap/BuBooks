@@ -39,12 +39,12 @@ class Category(models.Model):
 
 def book_directory_path(instance, filename):
     # File will be uploaded to Media/books/book_<id>/<filename>
-    return f"books/author_{instance.id_author.user.id}/{filename}/"
+    return f"books/author_{instance.author.user.id}/{filename}/"
 
 
 def book_cover_directory_path(instance, filename):
     # Image will be uploaded to Media/images/book_cover/book_<id>/<filename>
-    return f"images/authors/author_{instance.id_author.user.id}/book/{filename}/"
+    return f"images/authors/author_{instance.author.user.id}/book/{filename}/"
 
 
 class Book(models.Model):

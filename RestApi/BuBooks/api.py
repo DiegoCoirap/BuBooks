@@ -1,24 +1,73 @@
 from datetime import datetime
 from django.contrib.auth import authenticate
-
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.http import BadHeaderError, HttpResponseRedirect, HttpResponse
 from ninja import NinjaAPI, Schema
 from ninja import ModelSchema
 from ninja.security import HttpBearer
-from ninja.errors import ValidationError, AuthenticationError, HttpError
 from django.contrib.auth.models import User
 from ninja.pagination import paginate
 from typing import List
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
+
+from .factories import UserFactory, UserExtraDataFactory, AuthorFactory, BookFactory, CommentFactory, CartFactory, \
+    WishlistFactory, SaleFactory
 from .models import Book, Category, Cart, Comment, Author, Sale, Wishlist, UserExtraData
+from django.views.decorators.csrf import csrf_exempt
 
-# https://django-ninja.rest-framework.com/guides/authentication/ example auth
-# https://django-ninja.rest-framework.com/tutorial/other/crud/ example books
-# https://docs.djangoproject.com/en/4.2/topics/auth/default/#how-to-log-a-user-in
+api = NinjaAPI(csrf=False)
 
-api = NinjaAPI(csrf=True)
+
+@api.post("/fake-users")
+def create_fake_users(request):
+    for i in range(20):
+        UserFactory.create(),
+        UserExtraDataFactory.create()
+    return {"message": "Users have been successfully created"}
+
+
+@api.post("/fake-author-profile")
+def create_fake_author_data(request):
+    for i in range(20):
+        AuthorFactory.create(),
+    return {"message": "Authors have been successfully created"}
+
+
+@api.post("/fake-books")
+def create_fake_books(request):
+    for i in range(20):
+        BookFactory.create(),
+    return {"message": "Books have been successfully created"}
+
+
+@api.post("/fake-comments")
+def create_fake_comments(request):
+    for i in range(20):
+        CommentFactory.create(),
+    return {"message": "Comments have been successfully created"}
+
+
+@api.post("/fake-cart")
+def create_fake_cart(request):
+    for i in range(20):
+        CartFactory.create(),
+    return {"message": "Cart has been successfully created"}
+
+
+@api.post("/fake-wishlist")
+def create_fake_wishlist(request):
+    for i in range(20):
+        WishlistFactory.create(),
+    return {"message": "wishlist has been successfully created"}
+
+
+@api.post("/fake-SaleFactory")
+def create_fake_wishlist(request):
+    for i in range(20):
+        SaleFactory.create(),
+    return {"message": "Sales has been successfully created"}
 
 
 class AuthBearer(HttpBearer):
@@ -71,12 +120,18 @@ class LogIn(ModelSchema):
         model_fields = ['username', 'password']
 
 
-class BookSchema(ModelSchema):
-    class Config:
-        model = Book
-        model_fields = ['title', 'language', 'synopsis', 'category', 'series',
-                        'volumeNumber', 'target_audience', 'mature_content', 'price',
-                        'book_cover', 'book_file']
+class BookOut(Schema):
+    title: str
+    author: str
+    language: str
+    synopsis: str
+    category: str
+    series: str
+    volumeNumber: int
+    target_audience: str
+    mature_content: bool
+    price: str
+    book_cover: str
 
 
 class LanguageOption(Schema):
@@ -131,6 +186,11 @@ class SalesOut(Schema):
     date: str
 
 
+class LoginOut(Schema):
+    token: str
+    is_author: bool
+
+
 class CategorySchema(ModelSchema):
     class Config:
         model = Category
@@ -141,6 +201,13 @@ class AuthorIn(ModelSchema):
     class Config:
         model = Author
         model_fields = ['alias', 'about_you', 'image']
+
+
+class AuthorOut(Schema):
+    username: str
+    alias: str
+    about_you: str
+    books: list
 
 
 class CommentIn(Schema):
@@ -218,26 +285,22 @@ def validate_email(email_data):
         return 422, "Invalid Body"
 
 
+@csrf_exempt
 @api.post("/sign-up-user", auth=None)
 def signup_user(request, user_petition: UserRegister):
-    if user_petition is not None:
-        already_exists = User.objects.get(username=user_petition.username)
-        if already_exists is None:
-            user = {'username': user_petition.username, 'email': user_petition.email,
-                    'password': user_petition.password}
-            try:
-                User.objects.create_user(**user)
-            except RuntimeError:
-                return 503, "Service Unavailable. Please retry later."
-            author_user = get_object_or_404(User, username=user_petition.username)
-            UserExtraData.objects.create(user=author_user, is_author=user_petition.is_author, avatar=None)
-        else:
-            return 422, "Invalid Body"
+    user = {'username': user_petition.username, 'email': user_petition.email,
+            'password': user_petition.password}
+    try:
+        User.objects.create_user(**user)
+    except IntegrityError:
+        return HttpResponse('Username already exists.')
+    author_user = get_object_or_404(User, username=user_petition.username)
+    UserExtraData.objects.create(user=author_user, is_author=user_petition.is_author, avatar=None)
 
-            return {"status": 200, "message": "User has been successfully created"}
-    return {"status": 422, "message": "body is empty"}
+    return {"status": 200, "message": "User has been successfully created"}
 
 
+@csrf_exempt
 @api.post("/create-author", auth=AuthBearer())
 def create_author_data(request, author: AuthorIn):
     try:
@@ -250,23 +313,30 @@ def create_author_data(request, author: AuthorIn):
         Author.objects.create(**dictionary)
         return {"status": 200, "message": "Author profile has been successfully created"}
     except AttributeError:
-        return 403, "UnAuthorized"
+        return {"status": 403, "message": "UnAuthorized"}
 
 
-@api.post("/login")
+@csrf_exempt
+@api.api_operation(["POST", "GET"], "/login", auth=None, response=LoginOut)
 def login(request, use: LogIn):
     username = use.username
     password = use.password
-    user = authenticate(username=username, password=password)
-    if user is not None:
+    user_auth = authenticate(username=username, password=password)
+    is_author = is_user_an_author(user_auth)
+    if user_auth is not None:
         token_key = retrieve_token(use.username)
-        return token_key
+        login_data = {
+            'token': token_key,
+            'is_author': is_author
+        }
+        return login_data
     else:
-        return 422, "Invalid Body"
+        return {"status": 400, "detail": "Wrong Password or username"}
 
 
+@csrf_exempt
 @api.post("/create-book", auth=AuthBearer())
-def create_book(request, created_book: BookSchema):
+def create_book(request, created_book: BookOut):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
     is_author = is_user_an_author(user)
@@ -292,6 +362,7 @@ def create_book(request, created_book: BookSchema):
         return 403, "UnAuthorized"
 
 
+@csrf_exempt
 @api.post("/add-book-wishlist", auth=AuthBearer())
 def add_book_wishlist(request, payload: WishListIn):
     token = request.headers.get('Authorization')
@@ -309,6 +380,7 @@ def add_book_wishlist(request, payload: WishListIn):
         return {"status": 200, "message": "Book added to the Wishlist"}
 
 
+@csrf_exempt
 @api.post("/create-comment", auth=AuthBearer())
 def create_comment(request, payload: CommentIn):
     token_header = request.headers.get('Authorization')
@@ -329,6 +401,7 @@ def create_comment(request, payload: CommentIn):
         return {"status": 200, "message": "Comment created successfully"}
 
 
+@csrf_exempt
 @api.post("/add-book-cart", auth=AuthBearer())
 def add_book_cart(request, payload: CartIn):
     token = request.headers.get('Authorization')
@@ -342,6 +415,7 @@ def add_book_cart(request, payload: CartIn):
     return {"status": 200, "message": "Book added to the Cart"}
 
 
+@csrf_exempt
 @api.post("/book-bought", auth=AuthBearer())
 def sale(request, payload: SalesIn):
     token = request.headers.get('Authorization')
@@ -358,13 +432,61 @@ def sale(request, payload: SalesIn):
     return {"status": 200, "message": "Book bought successfully"}
 
 
-@api.get("/library", response=List[BookSchema])
+@csrf_exempt
+@api.api_operation(["POST", "GET"], "/comments", auth=None, response=List[CommentOut])
+def get_comments(request, payload: GetBookComment):
+    book = get_object_or_404(Book, title=payload.book)
+    comments = Comment.objects.filter(book=book.id)
+    if comments is None:
+        return 404, "Object does not exist"
+    SchemaOut = []
+    for comment in comments:
+        comment_info = {
+            'title': comment.title,
+            'comment': comment.comment,
+            'rating': comment.rating,
+            'user': str(comment.user)
+        }
+        SchemaOut.append(comment_info)
+    return SchemaOut
+
+
+@csrf_exempt
+@api.get("author-profile", auth=AuthBearer(), response=List[AuthorOut])
+def author_profile(request):
+    token_header = request.headers.get('Authorization')
+    author = retrieve_author(token_header)
+    user = retrieve_user(token_header)
+    if is_user_an_author(user):
+        author_data = get_object_or_404(Author, user=user)
+
+
+@csrf_exempt
+@api.get("/library", response=List[BookOut])
 @paginate
 def library(request):
-    queryset = Book.objects.all()
-    return {"status": 200}, list(queryset)
+    books = Book.objects.all()
+    SchemaOut = []
+    for book in books:
+        author = get_object_or_404(Author, id=book.author_id)
+        book_info = {
+            'title': book.title,
+            'author': str(author.alias),
+            'language': book.language,
+            'synopsis': book.synopsis,
+            'category': str(book.category),
+            'series': book.series,
+            'volumeNumber': book.volumeNumber,
+            'target_audience': book.target_audience,
+            'mature_content': book.mature_content,
+            'price': book.price,
+            'book_cover': str(book.book_cover),
+        }
+        SchemaOut.append(book_info)
+    return list(SchemaOut)
 
 
+@csrf_exempt
 @api.get("/wish-list", response=List[WishListOut], auth=AuthBearer())
 def wish_list(request):
     token = request.headers.get('Authorization')
@@ -385,9 +507,10 @@ def wish_list(request):
             'price': books.price
         }
         SchemaOut.append(book_info)
-    return {"status": 200}, SchemaOut
+    return SchemaOut
 
 
+@csrf_exempt
 @api.get("/cart", response=List[CartOut], auth=AuthBearer())
 def cart(request):
     token = request.headers.get('Authorization')
@@ -408,32 +531,10 @@ def cart(request):
             'price': books.price
         }
         SchemaOut.append(book_info)
-    return {200}, SchemaOut
-
-
-@api.get("/cart", response=List[CartOut])
-def cart(request):
-    token = request.headers.get('Authorization')
-    user = retrieve_user(token)
-    try:
-        cart_books = Cart.objects.filter(user_id=user.id).values('book_id')
-    except cart_books.DoesNotExist:
-        return 404, "Object does not exist"
-    SchemaOut = []
-    for cart_book in cart_books:
-        books = get_object_or_404(Book, id=cart_book.book_id)
-        author = get_object_or_404(Author, id=books.author_id)
-        book_info = {
-            'title': books.title,
-            'author': author.alias,
-            'language': books.language,
-            'book_cover': str(books.book_cover),
-            'price': books.price
-        }
-        SchemaOut.append(book_info)
     return SchemaOut
 
 
+@csrf_exempt
 @api.get("/my-books", response=List[SalesOut], auth=AuthBearer())
 def my_books(request):
     token = request.headers.get('Authorization')
@@ -458,35 +559,20 @@ def my_books(request):
     return SchemaOut
 
 
-@api.api_operation(["POST", "PATCH"], "/comments", auth=None, response=List[CommentOut])
-def get_comments(request, payload: GetBookComment):
-    book = get_object_or_404(Book, title=payload.book)
-    comments = Comment.objects.filter(book=book.id)
-    if comments is None:
-        return 404, "Object does not exist"
-    SchemaOut = []
-    for comment in comments:
-        comment_info = {
-            'title': comment.title,
-            'comment': comment.comment,
-            'rating': comment.rating,
-            'user': str(comment.user)
-        }
-        SchemaOut.append(comment_info)
-    return SchemaOut
-
-
+@csrf_exempt
 @api.get("/categories", response=List[CategorySchema])
 def categories(request):
     queryset = Category.objects.all()
     return list(queryset)
 
 
+@csrf_exempt
 @api.get("/language-options")
 def language_options(request) -> list[LanguageOption]:
     return [LanguageOption(languageCode=choice[0], languageLabel=choice[1]) for choice in Book.Language.choices]
 
 
+@csrf_exempt
 @api.put("/modify-author", auth=AuthBearer())
 def modify_author_data(request, author: AuthorIn):
     token = request.headers.get('Authorization')
@@ -498,6 +584,7 @@ def modify_author_data(request, author: AuthorIn):
     return {"message": "Author profile has been created successfully", "status": 200}
 
 
+@csrf_exempt
 @api.put("/modify-user", auth=AuthBearer())
 def modify_user(request, payload: ModifyUser):
     token = request.header.get('Authorization')
@@ -512,6 +599,7 @@ def modify_user(request, payload: ModifyUser):
     return {"message": "User has been modified successfully", "status": 200}
 
 
+@csrf_exempt
 @api.put("/change-password", auth=AuthBearer())
 def change_password(request, payload: ChangePassword):
     if payload is None:
@@ -527,9 +615,10 @@ def change_password(request, payload: ChangePassword):
         user_id.delete()
         return {"message": "User password has been successfully changed", "status": 200}
     else:
-        return 422, "Invalid input"
+        return {"message": "Invalid Input", "status": 422}
 
 
+@csrf_exempt
 @api.delete("/logout", auth=AuthBearer())
 def logout(request):
     token = request.auth
