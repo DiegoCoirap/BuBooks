@@ -16,7 +16,7 @@ class UserExtraData(models.Model):
 
 def author_directory_path(instance, filename):
     # Image will be uploaded to Media/images/author/author_<id>/<filename>
-    return f"images/authors/author_{instance.user.username}/pfp/{filename}"
+    return f"images/authors/author_{instance.alias}/pfp/{filename}"
 
 
 # Create your models here.
@@ -39,12 +39,12 @@ class Category(models.Model):
 
 def book_directory_path(instance, filename):
     # File will be uploaded to Media/books/book_<id>/<filename>
-    return f"books/author_{instance.author.user.id}/{filename}/"
+    return f"books/author_{instance.author.alias}/{filename}"
 
 
 def book_cover_directory_path(instance, filename):
     # Image will be uploaded to Media/images/book_cover/book_<id>/<filename>
-    return f"images/authors/author_{instance.author.user.id}/book/{filename}/"
+    return f"images/authors/author_{instance.author.alias}/book/{filename}"
 
 
 class Book(models.Model):
@@ -94,9 +94,23 @@ class Book(models.Model):
 
     status = models.TextField(choices=Status.choices, default="A")
     sales = models.BigIntegerField(default=0)
+    rating = models.IntegerField()
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.title} RATING:{self.rating}"
+
+    def calculate_average_rating(self):
+        comments = Comment.objects.filter(book=self)
+        if comments.exists():
+            total_rating = sum(comment.rating for comment in comments)
+            average_rating = total_rating / comments.count()
+            self.rating = round(average_rating, 2)
+        else:
+            self.rating = 0
+
+    def save(self, *args, **kwargs):
+        self.calculate_average_rating()
+        super().save(*args, **kwargs)
 
 
 class Comment(models.Model):

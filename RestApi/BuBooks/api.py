@@ -1,21 +1,22 @@
 from datetime import datetime
+from typing import List
+
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.http import BadHeaderError, HttpResponseRedirect, HttpResponse
-from ninja import NinjaAPI, Schema
-from ninja import ModelSchema
-from ninja.security import HttpBearer
-from django.contrib.auth.models import User
-from ninja.pagination import paginate
-from typing import List
-from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from ninja import ModelSchema
+from ninja import NinjaAPI, Schema
+from ninja.pagination import paginate
+from ninja.security import HttpBearer
+from rest_framework.authtoken.models import Token
 
 from .factories import UserFactory, UserExtraDataFactory, AuthorFactory, BookFactory, CommentFactory, CartFactory, \
     WishlistFactory, SaleFactory
 from .models import Book, Category, Cart, Comment, Author, Sale, Wishlist, UserExtraData
-from django.views.decorators.csrf import csrf_exempt
 
 api = NinjaAPI(csrf=False)
 
@@ -38,14 +39,16 @@ def create_fake_author_data(request):
 @api.post("/fake-books")
 def create_fake_books(request):
     for i in range(20):
-        BookFactory.create(),
+        BookFactory.create()
     return {"message": "Books have been successfully created"}
 
 
 @api.post("/fake-comments")
 def create_fake_comments(request):
     for i in range(20):
-        CommentFactory.create(),
+        comment = CommentFactory.create()
+        book = comment.book
+        book.save()
     return {"message": "Comments have been successfully created"}
 
 
@@ -64,7 +67,7 @@ def create_fake_wishlist(request):
 
 
 @api.post("/fake-SaleFactory")
-def create_fake_wishlist(request):
+def create_fake_Sales(request):
     for i in range(20):
         SaleFactory.create(),
     return {"message": "Sales has been successfully created"}
@@ -121,6 +124,7 @@ class LogIn(ModelSchema):
 
 
 class BookOut(Schema):
+    id: int
     title: str
     author: str
     language: str
@@ -132,6 +136,7 @@ class BookOut(Schema):
     mature_content: bool
     price: str
     book_cover: str
+    rating: int
 
 
 class LanguageOption(Schema):
@@ -420,13 +425,13 @@ def add_book_cart(request, payload: CartIn):
 def sale(request, payload: SalesIn):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
-    book = get_object_or_404(Book, id=payload.book_id)
+    book = get_object_or_404(Book, id=payload.book)
     book.sales = book.sales + 1
     book.save()
     book_sale = Sale(
         date=datetime.now(),
-        user_id=user,
-        book_id=book,
+        user=user,
+        book=book,
     )
     book_sale.save()
     return {"status": 200, "message": "Book bought successfully"}
@@ -470,6 +475,7 @@ def library(request):
     for book in books:
         author = get_object_or_404(Author, id=book.author_id)
         book_info = {
+            'id': book.id,
             'title': book.title,
             'author': str(author.alias),
             'language': book.language,
@@ -481,9 +487,33 @@ def library(request):
             'mature_content': book.mature_content,
             'price': book.price,
             'book_cover': str(book.book_cover),
+            'rating': book.rating
         }
         SchemaOut.append(book_info)
     return list(SchemaOut)
+
+
+@csrf_exempt
+@api.get("/book/{book_id}", response=BookOut)
+def specific_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    author = get_object_or_404(Author, id=book.author_id)
+    book_info = {
+        'id': book.id,
+        'title': book.title,
+        'author': str(author.alias),
+        'language': book.language,
+        'synopsis': book.synopsis,
+        'category': str(book.category),
+        'series': book.series,
+        'volumeNumber': book.volumeNumber,
+        'target_audience': book.target_audience,
+        'mature_content': book.mature_content,
+        'price': book.price,
+        'book_cover': str(book.book_cover),
+        'rating': book.rating
+    }
+    return book_info
 
 
 @csrf_exempt
@@ -552,7 +582,7 @@ def my_books(request):
             'author': author.alias,
             'language': books.language,
             'book_cover': str(books.book_cover),
-            'book_file': str(books.book_cover),
+            'book_file': str(books.book_file),
             'date': str(user_book.date),
         }
         SchemaOut.append(book_info)
