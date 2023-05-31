@@ -1,44 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Api from '../../Api';
+import './LoginForm.css';
 
-const UserProfile = ({ purchasedBooks, wishlist, onRemoveFromWishlist, onLogout }) => {
+const LoginForm = ({ userType }) => {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    if (name === 'username') {
+      setUsername(value);
+    } else if (name === 'password') {
+      setPassword(value);
+    }
+  };
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    if (username === '') {
+      setError('The username cannot be empty.');
+      return;
+    }
+    if (password === '') {
+      setError('The password cannot be empty.');
+      return;
+    }
+    try {
+      const response = await Api.login({ username, password });
+      if (response.error) {
+        setError(response.error);
+      } else {
+        if (response.is_author == true && userType === 'author'){
+          const token = response.token;
+        localStorage.setItem('token', token);
+        navigate('/authorProfile');
+        } else if (response.is_author == false && userType === 'user'){
+          const token = response.token;
+        localStorage.setItem('token', token);
+        navigate('/');
+        }else{
+          setError('User invalid')
+
+        }
+      }
+    } catch (error) {
+      setError('Error. Try again.');
+    }
+  };
+
   return (
     <div>
-      <h1>User Profile</h1>
-
-      <h2>Purchased Books</h2>
-      {purchasedBooks.length > 0 ? (
-        <div>
-          {purchasedBooks.map((book) => (
-            <div key={book.id}>
-              <img src={book.cover} alt={book.title} />
-              <h3>{book.title}</h3>
-              <button>Download</button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No purchased books.</p>
-      )}
-
-      <h2>Wishlist</h2>
-      {wishlist.length > 0 ? (
-        <div>
-          {wishlist.map((book) => (
-            <div key={book.id}>
-              <img src={book.cover} alt={book.title} />
-              <h3>{book.title}</h3>
-              <p>Price: {book.price}</p>
-              <button onClick={() => onRemoveFromWishlist(book.id)}>Remove from Wishlist</button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p>No wishlist items.</p>
-      )}
-
-      <button onClick={onLogout}>Logout</button>
+      <form className="loginForm" onSubmit={handleFormSubmit}>
+        <label>Username</label>
+        <input type="text" name="username" value={username} onChange={handleInputChange} />
+        <label>Password</label>
+        <input type="password" name="password" value={password} onChange={handleInputChange} />
+        <button type="submit" className="buttonLogin">
+          Login
+        </button>
+        <p className="signUpLink">
+          New here?{' '}
+          <a className="signUpLink" onClick={() => navigate('/signUpUser')}>
+            Sign up
+          </a>
+        </p>
+        {error && <p className="error">{error}</p>}
+      </form>
     </div>
   );
 };
 
-export default UserProfile;
+export default LoginForm;

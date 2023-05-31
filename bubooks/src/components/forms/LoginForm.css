@@ -30,6 +30,8 @@
     border: 1px solid #474954;
     font-size: 20px;
     border-radius: 8px;
+    margin-top: 20px;
+    cursor: pointer;
 }
 
 .error{

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Api from "../../Api";
+import './SignUpForm.css'
 
 const SignUpForm = ({ userType }) => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const SignUpForm = ({ userType }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
+  const [author, setAuthor] = useState(false);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -42,7 +44,7 @@ const SignUpForm = ({ userType }) => {
       return;
     }
     if (password === "") {
-      setError("The email password be empty");
+      setError("The password cannot be empty");
       return;
     }
     if (password !== confirmPassword) {
@@ -52,20 +54,32 @@ const SignUpForm = ({ userType }) => {
 
     try {
       let response;
+
       if (userType === "author") {
-        response = await Api.signUp({ username, email, password }, "author");
+        setAuthor(true);
+        response = await Api.signUp({
+          username,
+          email,
+          password,
+          is_author: true, // Use 'is_author' instead of 'author'
+        });
       } else if (userType === "user") {
-        response = await Api.signUp({ username, email, password }, "user");
+        setAuthor(false);
+        response = await Api.signUp({
+          username,
+          email,
+          password,
+          is_author: false, // Use 'is_author' instead of 'author'
+        });
       }
-      if (response.error) {
-        setError(response.error);
-      } else {
-        setToken(response.token);
-        localStorage.setItem("token", response.token);
-        if (userType === 'user') {
-          navigate('/');
-        } else if (userType === 'author') {
-          navigate('/createAuthor');
+
+      if (response) {
+        setToken(response);
+        localStorage.setItem("token", response);
+        if (userType === "user") {
+          navigate("/");
+        } else if (userType === "author") {
+          navigate("/createAuthor");
         }
       }
     } catch (error) {
