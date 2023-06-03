@@ -378,7 +378,7 @@ def add_book_wishlist(request, payload: WishListIn):
     if is_author:
         return 403, "UnAuthorized"
     else:
-        book = get_object_or_404(Book, id=payload.book_id)
+        book = get_object_or_404(Book, id=payload.book)
         book_wishlist = Wishlist(
             user_id=user,
             book_id=book,
