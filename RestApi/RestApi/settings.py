@@ -27,7 +27,9 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '192.168.0.23',
     'localhost',
-    '127.0.0.1'
+    '127.0.0.1',
+    '10.0.2.15',
+    '83.165.96.110'
 ]
 
 # Application definition
@@ -60,7 +62,8 @@ MEDIA_ROOT = BASE_DIR / "Media"
 MEDIA_URL = "/media/"
 ROOT_URLCONF = 'RestApi.urls'
 CORS_ALLOWED_ORIGINS = [
-    'http://192.168.0.39:3000'
+    'http://192.168.0.39:3000',
+    'http://79.116.192.88:3000'
 ]
 
 TEMPLATES = [

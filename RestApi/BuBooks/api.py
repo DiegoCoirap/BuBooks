@@ -14,13 +14,13 @@ from ninja.pagination import paginate
 from ninja.security import HttpBearer
 from rest_framework.authtoken.models import Token
 
-from .factories import UserFactory, UserExtraDataFactory, AuthorFactory, BookFactory, CommentFactory, CartFactory, \
-    WishlistFactory, SaleFactory
+# from .factories import UserFactory, UserExtraDataFactory, AuthorFactory, BookFactory, CommentFactory, CartFactory, \
+#   WishlistFactory, SaleFactory
 from .models import Book, Category, Cart, Comment, Author, Sale, Wishlist, UserExtraData
 
 api = NinjaAPI(csrf=False)
 
-
+""" Factory boy Data
 @api.post("/fake-users")
 def create_fake_users(request):
     for i in range(20):
@@ -71,6 +71,8 @@ def create_fake_Sales(request):
     for i in range(20):
         SaleFactory.create(),
     return {"message": "Sales has been successfully created"}
+
+"""
 
 
 class AuthBearer(HttpBearer):
