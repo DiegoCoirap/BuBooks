@@ -127,7 +127,6 @@ class LogIn(ModelSchema):
 
 class BookIn(Schema):
     title: str
-    author: str
     language: str
     synopsis: str
     category: str
@@ -137,22 +136,22 @@ class BookIn(Schema):
     mature_content: bool
     price: str
     book_cover: str
+    book_file: str
     rating: int
 
 
 class BookOut(Schema):
-    id: str
     title: str
-    author: str
     language: str
     synopsis: str
-    category: str
+    category: int
     series: str
     volumeNumber: int
     target_audience: str
     mature_content: bool
     price: str
     book_cover: str
+    book_file: str
     rating: int
 
 
