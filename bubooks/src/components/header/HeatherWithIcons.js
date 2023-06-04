@@ -38,10 +38,7 @@ const HeaderWithIcons = () => {
     navigate('/cart')
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
-  };
+
 
   return (
     <div className="backgroundHeader">
@@ -53,9 +50,7 @@ const HeaderWithIcons = () => {
         <>
           <PersonRoundedIcon className="profileIcon" onClick={handleProfileIconClick} />
           <ShoppingCartOutlinedIcon className="cartIcon" onClick={handleCartIconClick} />
-          <button className="logoutButton" onClick={handleLogout}>
-            Cerrar sesión
-          </button>
+
         </>
       )}
       {!isAuthenticated && <PersonRoundedIcon className="profileIcon" onClick={handleProfileIconClick} />}

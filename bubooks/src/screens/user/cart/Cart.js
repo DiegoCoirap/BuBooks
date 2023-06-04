@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './Cart.css'
+import HeaderWithoutIcons from "../../../components/header/HeaderWithoutIcons";
 
 const Cart = () => {
   const [cartBooks, setCartBooks] = useState([]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const fetchCartBooks = async () => {
       try {
         const token = localStorage.getItem('token');
         const config = {
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept: '*/*',
+            Accept: '*!/!*',
           },
         };
 
@@ -26,9 +28,24 @@ const Cart = () => {
     };
 
     fetchCartBooks();
+  }, []);*/
+  useEffect(() => {
+    // Simulating API call to fetch cart books
+    const fetchCartBooks = async () => {
+      // Simulated response data
+      const fakeData = [
+        { id: 1, title: 'Book 1' },
+        { id: 2, title: 'Book 2' },
+        { id: 3, title: 'Book 3' },
+      ];
+
+      setCartBooks(fakeData);
+    };
+
+    fetchCartBooks();
   }, []);
 
-  const handlePayPalPayment = async () => {
+  /*const handlePayPalPayment = async () => {
     try {
       // Perform PayPal payment logic here
 
@@ -68,25 +85,47 @@ const Cart = () => {
     } catch (error) {
       console.error('Error during PayPal payment:', error);
     }
+  };*/
+  const handlePayPalPayment = async () => {
+    try {
+      // Perform PayPal payment logic here
+
+      // Mark books as bought
+      const markBooksAsBought = async () => {
+        // Simulated successful marking of books as bought
+
+        // Clear the cart after successful payment
+        setCartBooks([]);
+      };
+
+      await markBooksAsBought();
+    } catch (error) {
+      console.error('Error during PayPal payment:', error);
+    }
   };
 
   return (
-    <div>
-      <h1>Cart</h1>
+    <div className='cartPage'>
+      <HeaderWithoutIcons/>
+      <div className="cartPageBody">
+        <h1>Your Cart</h1>
       {cartBooks.length > 0 ? (
-        <div>
-          <h2>Books in Cart:</h2>
+        <div className='cart'>
           <ul>
             {cartBooks.map((book) => (
-              <li key={book.id}>{book.title}</li>
+              <li key={book.id}>
+                {book.title}
+              </li>
             ))}
           </ul>
-          <button onClick={handlePayPalPayment}>Pay with PayPal</button>
+          <button onClick={handlePayPalPayment} className='paypalButton'>Pay with PayPal</button>
         </div>
       ) : (
         <p>Your cart is empty.</p>
       )}
     </div>
+      </div>
+
   );
 };
 
