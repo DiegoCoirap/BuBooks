@@ -524,13 +524,13 @@ def wish_list(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
     try:
-        wishlist_books = Wishlist.objects.filter(user_id=user.id).values('book_id')
+        wishlist_books = Wishlist.objects.filter(user_id=user.id)
     except wishlist_books.DoesNotExist:
         return 404, "Object does not exist"
     SchemaOut = []
     for wishlist_book in wishlist_books:
         books = Book.objects.get(id=wishlist_book.book_id)
-        author = Author.objects.get(id=books.author_id)
+        author = Author.objects.get(id=books.author.id)
         book_info = {
             'title': books.title,
             'author': author.alias,
@@ -548,13 +548,13 @@ def cart(request):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
     try:
-        cart_books = Cart.objects.filter(user_id=user.id).values('book_id')
+        cart_books = Cart.objects.filter(user_id=user.id)
     except cart_books.DoesNotExist:
         return 404, "Object does not exist"
     SchemaOut = []
     for cart_book in cart_books:
         books = Book.objects.get(id=cart_book.book_id)
-        author = Author.objects.get(id=books.author_id)
+        author = Author.objects.get(id=books.author.id)
         book_info = {
             'title': books.title,
             'author': author.alias,
