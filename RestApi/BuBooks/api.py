@@ -159,6 +159,7 @@ class SalesIn(ModelSchema):
 
 
 class CartOut(Schema):
+    id: int
     title: str
     author: str
     language: str
@@ -586,6 +587,7 @@ def cart(request):
         books = Book.objects.get(id=cart_book.book_id)
         author = Author.objects.get(id=books.author.id)
         book_info = {
+            'id': books.id,
             'title': books.title,
             'author': author.alias,
             'language': books.language,
