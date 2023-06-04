@@ -413,12 +413,12 @@ def create_comment(request, payload: CommentIn):
 def add_book_cart(request, payload: CartIn):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
-    book = get_object_or_404(Book, id=payload.book_id)
-    book_Cart = Cart(
+    book = get_object_or_404(Book, id=payload.book)
+    book_cart = Cart(
         user_id=user,
         book_id=book,
     )
-    book_Cart.save()
+    book_cart.save()
     return {"status": 200, "message": "Book added to the Cart"}
 
 
