@@ -125,8 +125,23 @@ class LogIn(ModelSchema):
         model_fields = ['username', 'password']
 
 
+class BookIn(Schema):
+    title: str
+    author: str
+    language: str
+    synopsis: str
+    category: str
+    series: str
+    volumeNumber: int
+    target_audience: str
+    mature_content: bool
+    price: str
+    book_cover: str
+    rating: int
+
+
 class BookOut(Schema):
-    id: int
+    id: str
     title: str
     author: str
     language: str
@@ -348,7 +363,7 @@ def login(request, use: LogIn):
 
 @csrf_exempt
 @api.post("/create-book", auth=AuthBearer())
-def create_book(request, created_book: BookOut):
+def create_book(request, created_book: BookIn):
     token = request.headers.get('Authorization')
     user = retrieve_user(token)
     is_author = is_user_an_author(user)
@@ -661,6 +676,7 @@ def modify_user(request, payload: ModifyUser):
         user.email = payload.email
     user.save()
     return {"message": "User has been modified successfully", "status": 200}
+
 
 
 @csrf_exempt
