@@ -36,7 +36,7 @@ const LoginForm = ({ userType }) => {
         if (response.is_author == true && userType === 'author'){
           const token = response.token;
         localStorage.setItem('token', token);
-        navigate('/authorProfile');
+        navigate('/createProfile');
         } else if (response.is_author == false && userType === 'user'){
           const token = response.token;
         localStorage.setItem('token', token);
@@ -74,3 +74,4 @@ const LoginForm = ({ userType }) => {
 };
 
 export default LoginForm;
+

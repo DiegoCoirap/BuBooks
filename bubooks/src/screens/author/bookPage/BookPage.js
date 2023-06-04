@@ -5,32 +5,29 @@ import './BookPage.css';
 import axios from 'axios';
 import HeaderWithIcons from "../../../components/header/HeatherWithIcons";
 
-const BookPage = () => {
+const BookPageAuthor = () => {
   const { id } = useParams();
   const [bookData, setBookData] = useState({ comments: [] });
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(5);
 
+
   useEffect(() => {
-  const fetchBookData = async () => {
-    try {
-      const response = await Api.getBookById(id);
-      if (response) {
-        setBookData(response);
-        console.log(response.title)
-        bookData.title = response.title
-        if (response.title) {
-          showComments(); // Call showComments only if the book data has a title
+    const fetchBookData = async () => {
+      try {
+        const response = await Api.getBookById(id);
+        if (response) {
+          setBookData(response);
+          showComments(); // Llamada automática a la función showComments después de obtener los datos del libro
+        } else {
+          console.error('No se obtuvo ninguna respuesta del servidor');
         }
-      } else {
-        console.error('No se obtuvo ninguna respuesta del servidor');
+      } catch (error) {
+        console.error(error);
       }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  fetchBookData();
-}, [id]);
+    };
+    fetchBookData();
+  }, [id]);
 
   const handleCommentChange = (event) => {
     setComment(event.target.value);
@@ -75,27 +72,6 @@ const BookPage = () => {
     }
   };
 
-  const handleAddComment = async () => {
-    try {
-      await Api.createComment({
-        title: 'New Comment',
-        comment: comment,
-        rating: rating,
-        book: bookData.title,
-      });
-      const response = await Api.getBookById(id);
-      if (response) {
-        setBookData(response);
-      } else {
-        console.error('No se obtuvo ninguna respuesta del servidor');
-      }
-      setComment('');
-      setRating(5);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   if (!bookData) {
     return <div>Loading...</div>;
   }
@@ -113,8 +89,6 @@ const BookPage = () => {
 
       <div className="commentSection">
         <h3>Comments</h3>
-        {/* Botón eliminado ya que los comentarios se cargarán automáticamente */}
-        {/* <button onClick={showComments}>Show Comments</button> */}
 
         <div className="commentList">
           {bookData.comments && bookData.comments.map((comment, index) => (
@@ -127,25 +101,9 @@ const BookPage = () => {
           ))}
         </div>
 
-        <div className="addComment">
-          <h4>Add a Comment</h4>
-          <textarea
-            value={comment}
-            onChange={handleCommentChange}
-            placeholder="Enter your comment..."
-          ></textarea>
-          <input
-            type="number"
-            min="1"
-            max="5"
-            value={rating}
-            onChange={handleRatingChange}
-          />
-          <button onClick={handleAddComment}>Add Comment</button>
-        </div>
       </div>
     </div>
   );
 };
 
-export default BookPage;
+export default BookPageAuthor;

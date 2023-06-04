@@ -2,14 +2,18 @@ import './Login.css'
 import HeaderWithoutIcons from "../../../components/header/HeaderWithoutIcons";
 import LoginForm from "../../../components/forms/LoginForm";
 import {useNavigate} from "react-router-dom";
+import {useEffect} from "react";
 
 
 const LoginUser = () => {
     const navigate = useNavigate();
 
+    useEffect(() => {
+    localStorage.setItem('userType', 'user');
+  }, []);
 
     return(
-        <div className='loginAuthor'>
+        <div className='loginUser'>
             <HeaderWithoutIcons/>
             <div className='boxLoginUser'>
                 <button className='UbuttonLoginUser' >User</button>

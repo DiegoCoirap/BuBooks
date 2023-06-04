@@ -1,98 +1,122 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import './BooksWithStars.css';
-import Background from '../../img/background.png';
 import Rating from '@mui/material/Rating';
 import Heart from '@mui/icons-material/FavoriteBorderOutlined';
 import Cart from '@mui/icons-material/AddShoppingCartOutlined';
 import Left from '@mui/icons-material/ArrowBackIosNewOutlined';
 import Right from '@mui/icons-material/ArrowForwardIosOutlined';
-import {Box} from '@mui/system';
-import Api from "../../Api";
+import { useNavigate } from 'react-router-dom';
 import ReactPaginate from 'react-paginate';
-import BASE_URL from '../../environment';
+import Api from '../../Api';
 
 const BooksWithStars = () => {
-    const [bookData, setBookData] = useState([]);
-    const [pageNumber, setPageNumber] = useState(0);
-    const booksPerPage = 16;
-    const pagesVisited = pageNumber * booksPerPage;
+  const navigate = useNavigate();
+  const [bookData, setBookData] = useState([]);
+  const [pageNumber, setPageNumber] = useState(0);
+  const booksPerPage = 16;
+  const pagesVisited = pageNumber * booksPerPage;
 
-    useEffect(() => {
-        const fetchBookData = async () => {
-            try {
-                const response = await Api.getBooks();
-                setBookData(response.items);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        fetchBookData();
-    }, []);
+  useEffect(() => {
+    const fetchBookData = async () => {
+      try {
+        const response = await Api.getBooks();
+        setBookData(response.items);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchBookData();
+  }, []);
 
-    const addToWishlist = (id) => {
+  const addToWishlist = async (id) => {
+    try {
+      const response = await Api.addToWishlist(id);
+      if (response.status === 200) {
         console.log(`Book added to wishlist: ${id}`);
-    };
+      } else {
+        console.error('Failed to add book to wishlist');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-    const addToCart = (id) => {
-        console.log(`Book added to cart: ${id}`);
-    };
+ const addToCart = async (id) => {
+  try {
+    const response = await Api.addToCart(id);
+    if (response.status === 200) {
+      console.log(`Book added to cart: ${id}`);
+    } else {
+      console.error('Failed to add book to cart');
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-    const navigateToBookPage = (id) => {
-        window.location.href = `/bookpage/${id}`;
-    };
 
-    const getBookCoverUrl = (author) => {
-        return `http://192.168.0.23:8000/media/images/authors/author_${author}/book/example.jpg
-`;
-    };
+  const navigateToAuthorProfile = (alias) => {
+    navigate(`/author/${alias}`);
+  };
 
-    const pageCount = Math.ceil(bookData.length / booksPerPage);
+  const navigateToBookPage = (id) => {
+    navigate(`/bookpage/${id}`);
+  };
 
-    const changePage = ({selected}) => {
-        setPageNumber(selected);
-    };
+  const getBookCoverUrl = (author) => {
+    return `http://192.168.0.23:8000/media/images/authors/author_${author}/book/example.jpg`;
+  };
 
-    return (
-        <div className='containerBooks'>
-        <div className='booksWithStars'>
-            {bookData.slice(pagesVisited, pagesVisited + booksPerPage).map((book) => (
-                <div key={book.title} className='bookList'>
-                    <img src={getBookCoverUrl(book.author)} alt="bOOK COVER" onClick={() => navigateToBookPage(book.id)}
-                         className='bookCover'/>
-                    <div className='bookInformation'>
-                        <div className='bookData'>
-                            <h3 className='bookTitle'>{book.title}</h3>
-                            <p className='bookAuthor'>{book.author}</p>
-                            <p className='bookPrice'>{book.price} €</p>
-                            <Box component="fieldset" borderColor="transparent" className="bookRating">
-                                <Rating name="book-rating" value={book.rating} precision={0.5} readOnly/>
-                            </Box>
-                        </div>
-                        <div className='bookButtons'>
-                            <Heart onClick={() => addToWishlist(book.title)}></Heart>
-                            <Cart onClick={() => addToCart(book.title)}></Cart>
-                        </div>
-                    </div>
+  const pageCount = Math.ceil(bookData.length / booksPerPage);
 
-                </div>
-            ))}
+  const changePage = ({ selected }) => {
+    setPageNumber(selected);
+  };
+
+  return (
+    <div className='containerBooks'>
+      <div className='booksWithStars'>
+        {bookData.slice(pagesVisited, pagesVisited + booksPerPage).map((book) => (
+          <div key={book.id} className='bookList'>
+            <img
+              src={getBookCoverUrl(book.author)}
+              alt='BOOK COVER'
+              onClick={() => navigateToBookPage(book.id)}
+              className='bookCover'
+            />
+            <div className='bookInformation'>
+              <h4 className='bookTitle'>{book.title}</h4>
+              <p className='bookAuthor' onClick={() => navigateToAuthorProfile(book.author)}>
+                {book.author}
+              </p>
+              <div className='bookRating'>
+                <Rating name='read-only' value={book.rating} precision={0.5} readOnly />
+              </div>
+              <div className='bookButtons'>
+                <button className='wishlistButton' onClick={() => addToWishlist(book.id)}>
+                  <Heart />
+                </button>
+                <button className='cartButton' onClick={() => addToCart(book.id)}>
+                  <Cart />
+                </button>
+              </div>
             </div>
-            <div className='bookPages'>
-                <ReactPaginate
-                    previousLabel={<Left/>}
-                    nextLabel={<Right/>}
-                    pageCount={pageCount}
-                    onPageChange={changePage}
-                    containerClassName={'pagination'}
-                    previousLinkClassName={'pagination__link'}
-                    nextLinkClassName={'pagination__link'}
-                    disabledClassName={'pagination__link--disabled'}
-                    activeClassName={'pagination__link--active'}
-                />
-            </div>
-
-            </div>
-    );
+          </div>
+        ))}
+      </div>
+      <ReactPaginate
+        previousLabel={<Left />}
+        nextLabel={<Right />}
+        pageCount={pageCount}
+        onPageChange={changePage}
+        containerClassName={'paginationBttns'}
+        previousLinkClassName={'previousBttn'}
+        nextLinkClassName={'nextBttn'}
+        disabledClassName={'paginationDisabled'}
+        activeClassName={'paginationActive'}
+      />
+    </div>
+  );
 };
 
 export default BooksWithStars;
