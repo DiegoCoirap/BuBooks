@@ -217,6 +217,10 @@ class AuthorOut(Schema):
     books: list
 
 
+class AuthorOutNeed(Schema):
+    alias: str
+
+
 class CommentIn(Schema):
     title: str
     comment: str
@@ -459,13 +463,39 @@ def get_comments(request, payload: GetBookComment):
 
 
 @csrf_exempt
-@api.get("author-profile", auth=AuthBearer(), response=List[AuthorOut])
-def author_profile(request):
-    token_header = request.headers.get('Authorization')
-    author = retrieve_author(token_header)
-    user = retrieve_user(token_header)
+@api.api_operation(["POST", "GET"], "/author-profile", auth=None, response=AuthorOut)
+def author_profile(request, payload: AuthorOutNeed):
+    author = get_object_or_404(Author, alias=payload.alias)
+    user = get_object_or_404(User, id=author.user.id)
     if is_user_an_author(user):
-        author_data = get_object_or_404(Author, user=user)
+        books = Book.objects.filter(author=author)
+        Booklist = []
+        for book in books:
+            book_info = {
+                'id': book.id,
+                'title': book.title,
+                'author': str(author.alias),
+                'language': book.language,
+                'synopsis': book.synopsis,
+                'category': str(book.category),
+                'series': book.series,
+                'volumeNumber': book.volumeNumber,
+                'target_audience': book.target_audience,
+                'mature_content': book.mature_content,
+                'price': book.price,
+                'book_cover': str(book.book_cover),
+                'rating': book.rating
+            }
+            Booklist.append(book_info)
+        author_data = {
+            'username': user.username,
+            'alias': author.alias,
+            'about_you': author.about_you,
+            'books': Booklist
+        }
+        return author_data
+    else:
+        return "User is not an author"
 
 
 @csrf_exempt
