@@ -380,8 +380,8 @@ def add_book_wishlist(request, payload: WishListIn):
     else:
         book = get_object_or_404(Book, id=payload.book)
         book_wishlist = Wishlist(
-            user_id=user,
-            book_id=book,
+            user_id=user.id,
+            book_id=book.id,
         )
         book_wishlist.save()
         return {"status": 200, "message": "Book added to the Wishlist"}
@@ -415,8 +415,8 @@ def add_book_cart(request, payload: CartIn):
     user = retrieve_user(token)
     book = get_object_or_404(Book, id=payload.book)
     book_cart = Cart(
-        user_id=user,
-        book_id=book,
+        user_id=user.id,
+        book_id=book.id,
     )
     book_cart.save()
     return {"status": 200, "message": "Book added to the Cart"}
