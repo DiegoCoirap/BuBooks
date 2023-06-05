@@ -136,7 +136,6 @@ class BookIn(Schema):
     mature_content: bool
     price: str
     book_cover: str
-    book_file: str
     rating: int
 
 
@@ -144,14 +143,13 @@ class BookOut(Schema):
     title: str
     language: str
     synopsis: str
-    category: int
+    category: str
     series: str
     volumeNumber: int
     target_audience: str
     mature_content: bool
     price: str
     book_cover: str
-    book_file: str
     rating: int
 
 
@@ -178,6 +176,7 @@ class CartOut(Schema):
     author: str
     language: str
     book_cover: str
+    price: str
 
 
 class WishListIn(ModelSchema):
@@ -379,7 +378,6 @@ def create_book(request, created_book: BookIn):
             mature_content=created_book.mature_content,
             price=created_book.price,
             book_cover=created_book.book_cover,
-            book_file=created_book.book_file,
         )
         book.save()
         book.category.set(created_book.category)
@@ -665,7 +663,7 @@ def modify_author_data(request, author: AuthorIn):
 @csrf_exempt
 @api.put("/modify-user", auth=AuthBearer())
 def modify_user(request, payload: ModifyUser):
-    token = request.header.get('Authorization')
+    token = request.headers.get('Authorization')
     user = retrieve_user(token)
     if payload.username is not None:
         user.username = payload.username
