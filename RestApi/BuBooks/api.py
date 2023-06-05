@@ -140,6 +140,7 @@ class BookIn(Schema):
 
 
 class BookOut(Schema):
+    author: str
     title: str
     language: str
     synopsis: str
