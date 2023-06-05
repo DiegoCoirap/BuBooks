@@ -538,7 +538,7 @@ def library(request):
         SchemaOut.append(book_info)
     return list(SchemaOut)
 
-
+#
 @csrf_exempt
 @api.get("/book/{book_id}", response=BookOut)
 def specific_book(request, book_id):
