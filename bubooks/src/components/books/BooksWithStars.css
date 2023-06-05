@@ -20,9 +20,12 @@
     flex-direction: column;
 }
 
+.paginator{
+    margin-left: 45%;
+}
+
 .pagination {
     display: flex;
-    margin: 0 auto;
     list-style-type: none;
     grid-column: 1/4;
 }

@@ -19,6 +19,16 @@ const setAuthHeader = () => {
 };
 
 export default {
+
+  async fetchAuthorProfile(alias) {
+    try {
+      setAuthHeader();
+      const response = await api.post('/bubooks/author-profile', { alias });
+      return response.data;
+    } catch (error) {
+      throw new Error('Error fetching author profile.');
+    }
+  },
   async login(props) {
     try {
       const response = await api.post('/bubooks/login', {
@@ -100,17 +110,16 @@ export default {
       throw new Error('Error adding book to wishlist.');
     }
   },
-
-  async addToCart(bookId) {
+async addToCart(bookId) {
   try {
     setAuthHeader();
     const response = await api.post('/bubooks/add-book-cart', {
       book_id: bookId,
     });
-    return response;
+    return response.data; // Cambiar "return response;" a "return response.data;"
   } catch (error) {
     throw new Error('Error adding book to cart.');
   }
-},
+}
 
 };

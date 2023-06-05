@@ -36,7 +36,12 @@ const LoginForm = ({ userType }) => {
         if (response.is_author == true && userType === 'author'){
           const token = response.token;
         localStorage.setItem('token', token);
-        navigate('/createProfile');
+        if (!localStorage.getItem('alias')){
+          navigate('/createProfile');
+        }else{
+          navigate(`/authorProfile/${localStorage.getItem('alias')}`)
+        }
+
         } else if (response.is_author == false && userType === 'user'){
           const token = response.token;
         localStorage.setItem('token', token);

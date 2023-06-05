@@ -20,7 +20,7 @@ const HeaderWithIcons = () => {
 
   if (isAuthenticated) {
     if (userType === 'author') {
-      navigate('/authorProfile');
+      navigate(`/authorProfile/${localStorage.getItem("alias")}`);
     } else {
       navigate('/');
     }

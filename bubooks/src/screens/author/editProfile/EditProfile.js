@@ -3,6 +3,7 @@ import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
 import './EditProfile.css'
 import HeaderWithoutIcons from "../../../components/header/HeaderWithoutIcons";
+import HeaderAuthor from "../../../components/header/HeaderAuthor";
 
 const EditAuthor = () => {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ const EditAuthor = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://192.168.1.133:8000/bubooks/create-author', authorData, {
+            const response = await axios.put('http://192.168.0.23:8000/bubooks/modify-author', authorData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -42,7 +43,7 @@ const EditAuthor = () => {
 
     return (
         <div className="editUser">
-            <HeaderWithoutIcons/>
+            <HeaderAuthor/>
             <div className="editUserContainer">
                 <h2 className="editUserH2">Edit your profile</h2>
                 <form className='editUserForm' onSubmit={handleSubmit}>

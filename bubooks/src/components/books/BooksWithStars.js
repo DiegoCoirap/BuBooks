@@ -60,6 +60,7 @@ const BooksWithStars = () => {
   };
 
   const navigateToBookPage = (id) => {
+    console.log(id)
     navigate(`/bookpage/${id}`);
   };
 
@@ -104,17 +105,19 @@ const BooksWithStars = () => {
           </div>
         ))}
       </div>
-      <ReactPaginate
+      <div className="paginator">
+        <ReactPaginate
         previousLabel={<Left />}
         nextLabel={<Right />}
         pageCount={pageCount}
         onPageChange={changePage}
-        containerClassName={'paginationBttns'}
-        previousLinkClassName={'previousBttn'}
+        containerClassName={'pagination'}
+        previousLinkClassName={'pagination__link'}
         nextLinkClassName={'nextBttn'}
-        disabledClassName={'paginationDisabled'}
-        activeClassName={'paginationActive'}
+        disabledClassName={'pagination__link--disabled'}
+        activeClassName={'pagination__link--active'}
       />
+      </div>
     </div>
   );
 };

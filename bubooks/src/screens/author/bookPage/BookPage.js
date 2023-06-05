@@ -4,106 +4,161 @@ import Api from '../../../Api';
 import './BookPage.css';
 import axios from 'axios';
 import HeaderWithIcons from "../../../components/header/HeatherWithIcons";
+import Rating from "@mui/material/Rating";
+import HeaderWithoutIcons from "../../../components/header/HeaderWithoutIcons";
+import HeaderAuthor from "../../../components/header/HeaderAuthor";
 
 const BookPageAuthor = () => {
-  const { id } = useParams();
-  const [bookData, setBookData] = useState({ comments: [] });
-  const [comment, setComment] = useState('');
-  const [rating, setRating] = useState(5);
+      const {id} = useParams();
+    const [bookData, setBookData] = useState({comments: []});
+    /*const [bookData, setBookData] = useState({
+        title: 'Sample Book',
+        author: 'John Doe',
+        synopsis: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et nunc et dolor porta volutpat. Ut aliquet tristique est, vitae iaculis nisi faucibus eget. Phasellus cursus lacinia diam, at scelerisque nulla tempus non. Sed eget nunc mi. Fusce convallis tellus a ullamcorper tempus. Sed eget risus et odio tristique feugiat.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et nunc et dolor porta volutpat. Ut aliquet tristique est, vitae iaculis nisi faucibus eget. Phasellus cursus lacinia diam, at scelerisque nulla tempus non. Sed eget nunc mi. Fusce convallis tellus a ullamcorper tempus. Sed eget risus et odio tristique feugiat.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et nunc et dolor porta volutpat. Ut aliquet tristique est, vitae iaculis nisi faucibus eget. Phasellus cursus lacinia diam, at scelerisque nulla tempus non. Sed eget nunc mi. Fusce convallis tellus a ullamcorper tempus. Sed eget risus et odio tristique feugiat.",
+        price: '$9.99',
+        rating: 3.5,
+        language: 'EN',
+        series: 'Lorem Ipsum',
+        volume_number: '2',
+        target_audience: '5',
+        mature_content: 'No',
+        comments: [{
+            title: 'Comment 1',
+            comment: 'Lorem ipsum dolor sit amet.',
+            rating: 4,
+            user: 'John'
+        }, {
+            title: 'Comment 2',
+            comment: 'orem ipsum dolor sit amet, consectetur adipiscing elit. Sed et nunc et dolor porta volutpat. Ut aliquet tristique est, vitae iaculis nisi faucibus eget. Phasellus cursus lacinia diam, a.',
+            rating: 5,
+            user: 'Jane'
+        }, {
+            title: 'Comment 3',
+            comment: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem.',
+            rating: 3,
+            user: 'Alex'
+        },],
+    });*/
+
+    useEffect(() => {
+        const fetchBookData = async () => {
+            try {
+                const response = await Api.getBookById(id);
+                if (response) {
+                    setBookData(response);
+                    console.log(response.title)
+                    bookData.title = response.title
+                    if (response.title) {
+                        showComments(); // Call showComments only if the book data has a title
+                    }
+                } else {
+                    console.error('No se obtuvo ninguna respuesta del servidor');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchBookData();
+    }, [id]);
 
 
-  useEffect(() => {
-    const fetchBookData = async () => {
-      try {
-        const response = await Api.getBookById(id);
-        if (response) {
-          setBookData(response);
-          showComments(); // Llamada automática a la función showComments después de obtener los datos del libro
-        } else {
-          console.error('No se obtuvo ninguna respuesta del servidor');
+    const showComments = async () => {
+        if (!bookData || !bookData.title) {
+            console.error('Book data is missing');
+            return;
         }
-      } catch (error) {
-        console.error(error);
-      }
+
+        try {
+            const response = await axios.post(`http://192.168.0.23:8000/bubooks/comments`, {
+                book: bookData.title
+            }, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data && Array.isArray(response.data)) {
+                const comments = response.data.map((comment) => ({
+                    title: comment.title,
+                    comment: comment.comment,
+                    rating: comment.rating,
+                    user: comment.user.toString(),
+                }));
+                setBookData((prevData) => ({
+                    ...prevData,
+                    comments: comments,
+                }));
+            } else {
+                console.error('No se obtuvo ninguna respuesta del servidor');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     };
-    fetchBookData();
-  }, [id]);
 
-  const handleCommentChange = (event) => {
-    setComment(event.target.value);
-  };
+    const getBookCoverUrl = (author) => {
+        return `http://192.168.0.23:8000/media/images/authors/author_${author}/book/example.jpg`;
+    };
 
-  const handleRatingChange = (event) => {
-    setRating(Number(event.target.value));
-  };
 
-  const showComments = async () => {
-    if (!bookData || !bookData.title) {
-      console.error('Book data is missing');
-      return;
+
+
+    if (!bookData) {
+        return <div>Loading...</div>;
     }
 
-    try {
-      const response = await axios.post(`http://192.168.1.133:8000/bubooks/comments`, {
-        book: bookData.title
-      }, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
+    return (<div className='bookPageMain'>
 
-      if (response.data && Array.isArray(response.data)) {
-        const comments = response.data.map((comment) => ({
-          title: comment.title,
-          comment: comment.comment,
-          rating: comment.rating,
-          user: comment.user.toString(),
-        }));
-        setBookData((prevData) => ({
-          ...prevData,
-          comments: comments,
-        }));
-      } else {
-        console.error('No se obtuvo ninguna respuesta del servidor');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+            <HeaderAuthor/>
+            <div className="bookPage">
+                <h1 className="bookPageTitle">{bookData.title}</h1>
+                <h2 className="bookPageAuthor">{bookData.author}</h2>
+                <div className="bookPageBody">
+                    <div className="imageAndRating">
+                        <img
+                            src={getBookCoverUrl(bookData.author)}
+                            alt='BOOK COVER'
+                            className='bookPageBookCover'/>
+                        <div className='bookPageRating'>
+                            <Rating size='large' name='read-only' value={bookData.rating} precision={0.5} readOnly/>
+                        </div>
+                    </div>
+                    <div className="bookPageInformation">
+                        <p className='bookPageSinopsis'>{bookData.synopsis}</p>
 
-  if (!bookData) {
-    return <div>Loading...</div>;
-  }
 
-  return (
-    <div className="bookPage">
-      <HeaderWithIcons/>
-      <h2>{bookData.title}</h2>
-      <p>Author: {bookData.author}</p>
-      <p>Price: {bookData.price}</p>
-      <p>Description: {bookData.synopsis}</p>
-      <p>Rating: {bookData.rating}</p>
-      <p>{bookData.language}</p>
-      <p>{bookData.target_audience}</p>
 
-      <div className="commentSection">
-        <h3>Comments</h3>
+                    </div>
 
-        <div className="commentList">
-          {bookData.comments && bookData.comments.map((comment, index) => (
-            <div className="comment" key={index}>
-              <h4>Comment by {comment.user}</h4>
-              <p>Title: {comment.title}</p>
-              <p>Comment: {comment.comment}</p>
-              <p>Rating: {comment.rating}</p>
+
+                    <div className="bookpageAditional">
+                        <p><span>Language: </span>{bookData.language}</p>
+                        <p><span>Series: </span>{bookData.series}</p>
+                        <p><span>Volume number: </span>{bookData.volume_number}</p>
+                        <p><span>Target audience: </span>{bookData.target_audience}</p>
+                        <p><span>Mature content: </span>{bookData.mature_content}</p>
+                    </div>
+                </div>
+
+                <div className="commentSection">
+                    <h3>Comments</h3>
+
+                    <div className="commentList">
+                        {bookData.comments && bookData.comments.map((comment, index) => (
+                            <div className="bookPagecomment" key={index}>
+                                <h4>Comment by {comment.user}</h4>
+                                <p>Title: {comment.title}</p>
+                                <p>Comment: {comment.comment}</p>
+                                <div className='commentRating'>
+                                    <Rating name='read-only' value={comment.rating} precision={0.5} readOnly/>
+                                </div>
+                            </div>))}
+                    </div>
+                </div>
             </div>
-          ))}
         </div>
-
-      </div>
-    </div>
-  );
+    );
 };
 
 export default BookPageAuthor;

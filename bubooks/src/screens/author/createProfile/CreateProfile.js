@@ -22,7 +22,7 @@ const CreateAuthor = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.post('http://192.168.1.133:8000/bubooks/create-author', authorData, {
+            const response = await axios.post('http://192.168.0.23:8000/bubooks/create-author', authorData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -31,6 +31,7 @@ const CreateAuthor = () => {
             if (response.status === 200) {
                 console.log('Author profile has been successfully created');
                 // Redirigir al perfil del autor con el alias como parámetro de la URL
+                localStorage.setItem('alias', alias)
                 navigate(`/authorProfile/${alias}`);
             } else {
                 console.log('Error creating author profile:', response.data.message);

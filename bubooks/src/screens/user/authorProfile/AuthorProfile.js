@@ -1,9 +1,9 @@
-/*
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import HeaderWithIcons from "../../../components/header/HeatherWithIcons";
-import './AuthorProfile.css'
+import api from '../../../Api'; // Importa el módulo de la API que creamos
+
+import './AuthorProfile.css';
 
 const AuthorUserProfile = () => {
   const { alias } = useParams();
@@ -12,14 +12,8 @@ const AuthorUserProfile = () => {
   useEffect(() => {
     const fetchAuthor = async () => {
       try {
-        const response = await axios.post('http://192.168.1.133:8000/bubooks/author-profile', {
-          alias
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        setAuthor(response.data);
+        const authorData = await api.fetchAuthorProfile(alias); // Utiliza la función fetchAuthorProfile de la API
+        setAuthor(authorData);
       } catch (error) {
         console.error(error);
       }
@@ -33,27 +27,38 @@ const AuthorUserProfile = () => {
   }
 
   return (
-    <div>
-      <HeaderWithIcons />
-      <h1>{author.username}</h1>
-      <img src={author.image} alt="Author" />
-      <p>{author.about_you}</p>
-      <h2>Books</h2>
-      <ul>
-        {author.books.map(book => (
-          <li key={book.id}>
-              {book.title}
-              img{book.book_cover}
-          </li>
-        ))}
-      </ul>
+    <div className='authorProfile'>
+      <HeaderWithIcons/>
+      <div className="authorProfileMain">
+        <div className="authorProfileLeft">
+          <h1>{author.alias}</h1>
+          <img src={author.image} alt="Author"/>
+          <p>{author.about_you}</p>
+        </div>
+
+        <div className="authorProfileRight">
+          <h2>His books</h2>
+          <ul>
+            {author.books.map(book => (
+              <li key={book.id}>
+                <div className='authorProfileBook'>
+                  <img src={book.book_cover} alt={book.title}/>
+                  {book.title}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default AuthorUserProfile;
-*/
 
+
+
+/*
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 import {useParams} from 'react-router-dom';
@@ -134,3 +139,4 @@ const AuthorUserProfile = () => {
 
 export default AuthorUserProfile;
 
+*/

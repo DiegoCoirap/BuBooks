@@ -1,4 +1,5 @@
 const API_URL = "http://192.168.1.133:8000";
-const BASE_URL = API_URL;
+const API = "http://192.168.0.23:8000"
+const BASE_URL = API;
 
-export default BASE_URL;
+export default API;
